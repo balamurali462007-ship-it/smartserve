@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SmartServe - On-demand home services powered by AI.">
+    <meta name="theme-color" content="#0f172a">
+    <title>SmartServe | Login</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body class="fade-in">
+    <div class="glass-card" id="auth-container">
+        <h1>SmartServe</h1>
+        <p class="tagline">Smart Service, On Demand</p>
+        
+        <div id="login-form">
+            <div class="input-group">
+                <input type="email" id="login-email" class="text-area" placeholder="Email" style="margin-bottom: 1rem; padding: 0.75rem;">
+                <input type="password" id="login-password" class="text-area" placeholder="Password" style="margin-bottom: 1rem; padding: 0.75rem;">
+            </div>
+            <div class="btn-container">
+                <button id="login-btn" class="btn btn-primary">Login</button>
+            </div>
+            <p style="margin-top: 1rem; font-size: 0.875rem; color: #94a3b8;">
+                Don't have an account? <a href="#" id="show-register" style="color: var(--accent-color);">Register</a>
+            </p>
+        </div>
+
+        <div id="register-form" style="display: none;">
+            <div class="input-group">
+                <input type="text" id="reg-name" class="text-area" placeholder="Full Name" style="margin-bottom: 1rem; padding: 0.75rem;">
+                <input type="email" id="reg-email" class="text-area" placeholder="Email" style="margin-bottom: 1rem; padding: 0.75rem;">
+                <input type="password" id="reg-password" class="text-area" placeholder="Password" style="margin-bottom: 1rem; padding: 0.75rem;">
+                <select id="reg-role" class="text-area" style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.05); color: #fff;">
+                    <option value="USER">Customer</option>
+                    <option value="WORKER">Worker</option>
+                </select>
+                <input type="text" id="reg-skill" class="text-area" placeholder="Skill (if worker)" style="margin-bottom: 1rem; padding: 0.75rem; display: none;">
+            </div>
+            <div class="btn-container">
+                <button id="register-btn" class="btn btn-primary">Register</button>
+            </div>
+            <p style="margin-top: 1rem; font-size: 0.875rem; color: #94a3b8;">
+                Already have an account? <a href="#" id="show-login" style="color: var(--accent-color);">Login</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/script.js"></script>
+</body>
+</html>

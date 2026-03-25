@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Manage your service jobs and track earnings as a SmartServe worker.">
+    <meta name="theme-color" content="#0f172a">
+    <title>SmartServe | Worker Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body class="fade-in">
+    <div class="dashboard-container">
+        <a href="/index.html" class="nav-back">← Back to Login</a>
+        
+        <!-- Header Section -->
+        <div class="worker-header">
+            <div class="worker-profile">
+                <div class="worker-img" style="width: 60px; height: 60px; font-size: 1.5rem;">RK</div>
+                <div>
+                    <h1 style="font-size: 2rem; margin-bottom: 0;">Worker Dashboard</h1>
+                    <p style="color: #94a3b8;">Welcome back, <span style="color: #fff; font-weight: 600;">Raj Kumar</span></p>
+                </div>
+            </div>
+            <div class="action-area" style="width: auto; display: flex; align-items: center; gap: 1rem;">
+                <div id="online-status" class="online-toggle">
+                    <div class="toggle-circle"></div>
+                    <span id="status-text">Online</span>
+                </div>
+                <button id="logout-btn" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.875rem;">Logout</button>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="worker-stats-grid">
+            <div class="stat-card">
+                <p class="stat-label">Earnings Today</p>
+                <p id="earnings-today" class="stat-value">₹0</p>
+            </div>
+            <div class="stat-card">
+                <p class="stat-label">Average Rating</p>
+                <p id="avg-rating" class="stat-value">⭐ 4.8</p>
+            </div>
+            <div class="stat-card">
+                <p class="stat-label">Jobs Completed</p>
+                <p id="jobs-completed" class="stat-value">0</p>
+            </div>
+        </div>
+
+        <!-- Job History Section -->
+        <h3 class="section-title">Job History</h3>
+        <div id="job-history-list" class="job-list" style="margin-bottom: 3rem;">
+            <!-- Job history items will be injected here -->
+            <div class="empty-msg" style="width: 100%; grid-column: 1 / -1;">No jobs completed today yet.</div>
+        </div>
+
+        <!-- Reschedule Requests Section -->
+        <h3 class="section-title">Reschedule Requests</h3>
+        <div id="reschedule-requests" class="job-list" style="margin-bottom: 3rem;">
+            <div class="empty-msg" style="width: 100%; grid-column: 1 / -1;">No pending requests.</div>
+        </div>
+
+        <!-- Current Job Section -->
+        <div id="current-job-section" style="display: none; margin-bottom: 3rem;">
+            <h3 class="section-title">📍 Current Job</h3>
+            <div id="current-job-card" class="job-card active-job" style="border: 2px solid var(--accent-color); background: rgba(245, 158, 11, 0.1);">
+                <!-- Current job details will be injected here -->
+            </div>
+        </div>
+
+        <!-- Job List Section -->
+        <h3 class="section-title">Active Jobs</h3>
+        <div class="job-list">
+            <div class="job-card">
+                <div class="job-info">
+                    <h4>Pipe Leak</h4>
+                    <p>Sector 14, Gurgaon • 1.2 km away</p>
+                </div>
+                <span class="status-badge status-pending">Pending</span>
+            </div>
+            <div class="job-card">
+                <div class="job-info">
+                    <h4>Wall Painting</h4>
+                    <p>DLF Phase 3 • 3.5 km away</p>
+                </div>
+                <span class="status-badge status-accepted">Accepted</span>
+            </div>
+        </div>
+
+        <!-- Demand Heatmap Section -->
+        <div class="heatmap-container">
+            <h3 class="section-title">🔥 High Demand Areas</h3>
+            <p style="color: #94a3b8; font-size: 0.875rem;">Real-time demand insights based on AI analysis.</p>
+            
+            <div class="heatmap-grid">
+                <div class="heatmap-item">
+                    <div class="heatmap-box demand-high">High</div>
+                    <p class="heatmap-label">Sector 21</p>
+                </div>
+                <div class="heatmap-item">
+                    <div class="heatmap-box demand-high">High</div>
+                    <p class="heatmap-label">Cyber City</p>
+                </div>
+                <div class="heatmap-item">
+                    <div class="heatmap-box demand-medium">Medium</div>
+                    <p class="heatmap-label">Golf Course</p>
+                </div>
+                <div class="heatmap-item">
+                    <div class="heatmap-box demand-low">Low</div>
+                    <p class="heatmap-label">Sohna Road</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Section -->
+        <div class="performance-card">
+            <h3 class="section-title">Performance Insights</h3>
+            <p style="color: #fff; font-weight: 600;">You are in the <span style="color: var(--accent-color);">Top 10%</span> in your area!</p>
+            
+            <div class="progress-container">
+                <div class="progress-bar"></div>
+            </div>
+            <div class="progress-text">
+                <span>8/10 Jobs</span>
+                <span>2 more jobs to unlock ₹200 bonus</span>
+            </div>
+        </div>
+
+        <!-- Final Action Area -->
+        <div class="action-area" style="justify-content: center; margin-bottom: 3rem;">
+            <button class="btn btn-primary" style="max-width: 300px; width: 100%;">View All Jobs</button>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/script.js"></script>
+</body>
+</html>

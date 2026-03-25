@@ -1,0 +1,114 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields: id, email, name, role, skill, rating, available, location, createdAt
+    //
+    // Collection: jobs
+    // Fields: id, userId, workerId, serviceType, status, amount, location, description, createdAt
+    //
+    // Collection: payments
+    // Fields: id, jobId, userId, amount, method, status, razorpay_payment_id, createdAt
+    //
+    // Collection: ratings
+    // Fields: id, jobId, workerId, userId, score, comment, createdAt
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "balamurali462007@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['id', 'email', 'name', 'role', 'skill', 'rating', 'available', 'location', 'createdAt']) &&
+             data.id is string && data.email is string && isValidEmail(data.email) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.role in ['USER', 'WORKER'] &&
+             (!('skill' in data) || data.skill is string) &&
+             (!('rating' in data) || data.rating is number) &&
+             (!('available' in data) || data.available is bool) &&
+             (!('location' in data) || (data.location is map && data.location.keys().hasAll(['lat', 'lng'])));
+    }
+
+    function isValidJob(data) {
+      return hasOnlyAllowedFields(['id', 'userId', 'workerId', 'serviceType', 'status', 'amount', 'location', 'description', 'createdAt']) &&
+             data.id is string && data.userId is string &&
+             data.serviceType is string &&
+             data.status in ['PENDING', 'ASSIGNED', 'ON_THE_WAY', 'ARRIVED', 'COMPLETED', 'CANCELLED'] &&
+             (!('amount' in data) || data.amount is number) &&
+             (!('workerId' in data) || data.workerId is string) &&
+             (!('description' in data) || data.description is string);
+    }
+
+    function isValidPayment(data) {
+      return hasOnlyAllowedFields(['id', 'jobId', 'userId', 'amount', 'method', 'status', 'razorpay_payment_id', 'createdAt']) &&
+             data.id is string && data.jobId is string && data.userId is string &&
+             data.amount is number && data.method is string && data.status is string;
+    }
+
+    function isValidRating(data) {
+      return hasOnlyAllowedFields(['id', 'jobId', 'workerId', 'userId', 'score', 'comment', 'createdAt']) &&
+             data.id is string && data.jobId is string && data.workerId is string &&
+             data.userId is string && data.score is number && data.score >= 1 && data.score <= 5;
+    }
+
+    // ===============================================================
+    // Match Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if (isOwner(userId) || isAdmin()) && isValidUser(request.resource.data);
+    }
+
+    match /jobs/{jobId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidJob(request.resource.data);
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId || 
+        request.auth.uid == resource.data.workerId ||
+        (resource.data.status == 'PENDING' && request.resource.data.workerId == request.auth.uid)
+      ) && isValidJob(request.resource.data);
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidPayment(request.resource.data);
+    }
+
+    match /ratings/{ratingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidRating(request.resource.data);
+    }
+  }
+}

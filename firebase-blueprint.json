@@ -1,0 +1,99 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents a customer or a service worker in the system.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["USER", "WORKER"] },
+        "skill": { "type": "string", "description": "Only for workers (e.g., Plumber, Electrician)" },
+        "rating": { "type": "number" },
+        "available": { "type": "boolean" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email", "name", "role"]
+    },
+    "Job": {
+      "title": "Job",
+      "description": "Represents a service request (job).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "workerId": { "type": "string" },
+        "serviceType": { "type": "string" },
+        "status": { "type": "string", "enum": ["PENDING", "ASSIGNED", "ON_THE_WAY", "ARRIVED", "COMPLETED", "CANCELLED"] },
+        "amount": { "type": "number" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "serviceType", "status", "createdAt"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Represents a transaction for a completed job.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "jobId": { "type": "string" },
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "method": { "type": "string" },
+        "status": { "type": "string" },
+        "razorpay_payment_id": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "jobId", "userId", "amount", "method", "status", "createdAt"]
+    },
+    "Rating": {
+      "title": "Rating",
+      "description": "Represents a review given by a user to a worker.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "jobId": { "type": "string" },
+        "workerId": { "type": "string" },
+        "userId": { "type": "string" },
+        "score": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "jobId", "workerId", "userId", "score", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of users and workers."
+    },
+    "/jobs/{jobId}": {
+      "schema": "Job",
+      "description": "Collection of service requests."
+    },
+    "/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Collection of payment transactions."
+    },
+    "/ratings/{ratingId}": {
+      "schema": "Rating",
+      "description": "Collection of worker reviews."
+    }
+  }
+}

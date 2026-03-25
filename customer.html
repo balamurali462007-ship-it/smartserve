@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Manage your service requests and track workers in real-time.">
+    <meta name="theme-color" content="#0f172a">
+    <title>SmartServe | Customer Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://unpkg.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body class="fade-in">
+    <div class="demo-btn-container">
+        <button id="view-notifications-btn" class="btn-demo" style="background: rgba(255,255,255,0.1); margin-right: 0.5rem;">
+            <span>🔔</span> <span id="notif-count" class="notif-badge">0</span>
+        </button>
+        <button id="full-demo-btn" class="btn-demo">
+            <span>🚀</span> Run Full Demo
+        </button>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Notification History Modal -->
+    <div id="notif-modal" class="modal-overlay" style="display: none;">
+        <div class="glass-card notif-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;">Notifications</h2>
+                <button id="close-notif-btn" class="btn-close">✕</button>
+            </div>
+            <div id="notif-list" class="notif-list">
+                <p class="empty-msg">No new notifications</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <a href="/index.html" class="nav-back" style="margin: 0;">← Back to Home</a>
+            <button id="logout-btn" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.875rem;">Logout</button>
+        </div>
+        <div class="glass-card" style="max-width: 800px; width: 100%; text-align: left;">
+            <h1>Customer Dashboard</h1>
+            <p class="tagline">Describe your problem or upload media for AI analysis.</p>
+            
+            <div class="input-group">
+                <label class="input-label">Problem Description</label>
+                <textarea class="text-area" id="problem-desc" rows="4" placeholder="Describe your problem (e.g., water leak, broken switch)"></textarea>
+                
+                <div class="upload-container">
+                    <div class="upload-btn">
+                        <span>📷</span> Upload Image
+                    </div>
+                    <div class="upload-btn">
+                        <span>🎥</span> Upload Video
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center;">
+                <button id="analyze-btn" class="btn btn-primary" style="width: 100%; max-width: 300px;">Analyze with AI</button>
+            </div>
+
+            <!-- AI Analysis Result Section -->
+            <div id="analysis-section" class="analysis-result">
+                <!-- Searching Overlay -->
+                <div id="searching-overlay" class="searching-overlay" style="display: none;">
+                    <div class="loader"></div>
+                    <h3 style="margin-top: 1.5rem;">Finding the best worker for you...</h3>
+                    <p id="match-status" style="color: #94a3b8; font-size: 0.875rem; margin-top: 0.5rem;">Analyzing rating and distance...</p>
+                </div>
+
+                <div id="loading-state" style="text-align: center;">
+                    <div class="loading-spinner"></div>
+                    <p class="analysis-text">Analyzing your problem...</p>
+                </div>
+
+                <div id="result-state" style="display: none;">
+                    <p class="analysis-text" style="color: #10b981;">AI Analysis Complete</p>
+                    <p style="color: #94a3b8; margin-bottom: 0.5rem;">Suggested Worker: <span id="worker-skill" style="color: #fff; font-weight: 600;">Plumber</span></p>
+                    <p id="analysis-summary" style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5;"></p>
+
+                    <!-- Worker Card -->
+                    <div id="worker-card" class="worker-card" style="position: relative;">
+                        <div id="best-match-badge" class="best-match-badge" style="display: none;">Best Match Assigned</div>
+                        <div id="worker-avatar" class="worker-img">RK</div>
+                        <div class="worker-info">
+                            <h3 id="worker-name" class="worker-name">Raj Kumar</h3>
+                            <p id="worker-skill" class="worker-skill">Plumber</p>
+                            <div class="worker-stats">
+                                <div class="stat-item" id="worker-rating-display">⭐ 4.8</div>
+                                <div class="stat-item" id="worker-distance-display">📍 1.2 km</div>
+                                <div class="stat-item price-tag">₹300 (Base)</div>
+                            </div>
+                        </div>
+                        <button id="book-btn" class="btn btn-primary" style="padding: 0.75rem 1.5rem;">Book Now</button>
+                    </div>
+
+                    <!-- Booking Status -->
+                    <div id="booking-status" class="booking-status">
+                        <div class="status-step" id="step-1">
+                            <div class="status-dot"></div>
+                            <span>Searching worker...</span>
+                        </div>
+                        <div class="status-step" id="step-2">
+                            <div class="status-dot"></div>
+                            <span>Worker Assigned</span>
+                        </div>
+                        <div class="status-step" id="step-3">
+                            <div class="status-dot"></div>
+                            <span>Worker on the way</span>
+                        </div>
+                        <div class="status-step" id="step-4">
+                            <div class="status-dot"></div>
+                            <span>Worker Arrived</span>
+                        </div>
+                        <div class="status-step" id="step-5">
+                            <div class="status-dot"></div>
+                            <span>Work In Progress</span>
+                        </div>
+                        <div class="status-step" id="step-6">
+                            <div class="status-dot"></div>
+                            <span>Work Completed</span>
+                        </div>
+                        <div class="status-step" id="step-7" style="display: none;">
+                            <div class="status-dot" style="background: #ef4444;"></div>
+                            <span style="color: #ef4444;">Job Cancelled</span>
+                        </div>
+                    </div>
+
+                    <!-- Cancel & Reschedule Buttons -->
+                    <div id="booking-actions" style="display: none; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                        <button id="reschedule-btn" class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff;">Reschedule</button>
+                        <button id="cancel-booking-btn" class="btn" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444;">Cancel Job</button>
+                    </div>
+
+                    <!-- Arrival Confirmation & Timer -->
+                    <div id="arrival-actions" style="margin-top: 1.5rem; display: none; text-align: center;">
+                        <div id="arrival-notification" class="arrival-notification">
+                            <span class="pulse-icon">📍</span>
+                            <div>
+                                <p style="font-weight: 700; margin: 0;">Worker has arrived!</p>
+                                <p style="font-size: 0.75rem; color: #94a3b8; margin: 0;">Please confirm to start the work.</p>
+                            </div>
+                        </div>
+                        <button id="confirm-arrival-btn" class="btn btn-primary" style="width: 100%; margin-top: 1rem; background: #10b981; color: #fff;">Confirm Worker Arrival</button>
+                    </div>
+
+                    <div id="job-timer-container" style="margin-top: 1.5rem; display: none; text-align: center; padding: 1.5rem; background: rgba(255,255,255,0.05); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                        <p style="font-size: 0.875rem; color: #94a3b8; margin-bottom: 0.25rem;">Work Started • Timer</p>
+                        <p id="job-timer" style="font-size: 2.5rem; font-weight: 800; font-family: var(--font-mono); color: #fff; margin-bottom: 1rem;">00:00:00</p>
+                        
+                        <div id="live-cost-container" style="padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <p style="font-size: 0.875rem; color: #94a3b8; margin-bottom: 0.25rem;">Live Billing</p>
+                            <p id="live-cost" style="font-size: 1.75rem; font-weight: 700; color: #10b981;">₹300.00</p>
+                            <p style="font-size: 0.75rem; color: #64748b;">Base: ₹300 + ₹5/min</p>
+                        </div>
+                        
+                        <p id="work-started-msg" style="color: #10b981; font-weight: 600; margin-top: 1rem; display: none;">Work Started</p>
+                    </div>
+
+                    <!-- Live Tracking Map Section -->
+                    <div id="live-tracking" style="margin-top: 2rem; display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 class="section-title" style="margin: 0;">Live Tracking</h3>
+                            <div id="eta-label" class="eta-badge">Calculating ETA...</div>
+                        </div>
+                        <div class="map-wrapper">
+                            <div id="map" style="height: 400px; width: 100%; border-radius: 20px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="modal-overlay" style="display: none;">
+        <div class="glass-card payment-card">
+            <h2 style="margin-bottom: 0.5rem;">Payment</h2>
+            <p style="color: #94a3b8; margin-bottom: 1.5rem;">Choose your preferred payment method</p>
+
+            <!-- Price Breakdown -->
+            <div class="price-breakdown">
+                <div class="price-row">
+                    <span>Service Cost</span>
+                    <span id="bill-service-cost">₹300</span>
+                </div>
+                <div class="price-row">
+                    <span>Platform Fee</span>
+                    <span id="bill-platform-fee">₹20</span>
+                </div>
+                <div class="price-row total">
+                    <span>Total Amount</span>
+                    <span id="bill-total-amount">₹320</span>
+                </div>
+            </div>
+
+            <!-- Payment Methods -->
+            <div class="payment-methods">
+                <!-- Cash -->
+                <div class="payment-option active" data-method="cash">
+                    <div class="option-icon">💵</div>
+                    <div class="option-info">
+                        <p class="option-title">Cash</p>
+                        <p class="option-desc">Pay directly to Raj Kumar</p>
+                    </div>
+                </div>
+
+                <!-- UPI -->
+                <div class="payment-option" data-method="upi">
+                    <div class="option-icon">📱</div>
+                    <div class="option-info">
+                        <p class="option-title">UPI</p>
+                        <p class="option-desc">Google Pay, PhonePe, Paytm</p>
+                    </div>
+                </div>
+
+                <!-- Card -->
+                <div class="payment-option" data-method="card">
+                    <div class="option-icon">💳</div>
+                    <div class="option-info">
+                        <p class="option-title">Debit / Credit Card</p>
+                        <p class="option-desc">Visa, Mastercard, RuPay</p>
+                    </div>
+                </div>
+
+                <!-- Net Banking -->
+                <div class="payment-option" data-method="netbanking">
+                    <div class="option-icon">🏦</div>
+                    <div class="option-info">
+                        <p class="option-title">Net Banking</p>
+                        <p class="option-desc">All major banks supported</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Method Details -->
+            <div id="method-details" class="method-details">
+                <!-- UPI Details -->
+                <div id="upi-details" style="display: none;">
+                    <div class="upi-apps">
+                        <div class="upi-app">GPay</div>
+                        <div class="upi-app">PhonePe</div>
+                        <div class="upi-app">Paytm</div>
+                    </div>
+                    <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 1rem;">Or pay via UPI ID: smartserve@upi</p>
+                </div>
+
+                <!-- Card Details -->
+                <div id="card-details" style="display: none;">
+                    <div class="card-inputs">
+                        <input type="text" class="text-area" placeholder="Card Number" style="padding: 0.75rem; margin-bottom: 0.5rem;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" class="text-area" placeholder="MM/YY" style="padding: 0.75rem;">
+                            <input type="password" class="text-area" placeholder="CVV" style="padding: 0.75rem;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Netbanking Details -->
+                <div id="netbanking-details" style="display: none;">
+                    <select class="text-area" style="padding: 0.75rem;">
+                        <option>Select Bank</option>
+                        <option>SBI</option>
+                        <option>HDFC Bank</option>
+                        <option>ICICI Bank</option>
+                        <option>Axis Bank</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="pay-now-btn" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">Pay ₹320</button>
+        </div>
+    </div>
+
+    <!-- Payment Success Screen -->
+    <div id="payment-success-modal" class="modal-overlay" style="display: none;">
+        <div class="glass-card success-card">
+            <div class="success-check">✓</div>
+            <h2 style="margin-top: 1.5rem;">Payment Successful</h2>
+            <p style="color: #94a3b8; margin-bottom: 2rem;">Transaction ID: #SS-982341</p>
+
+            <div class="success-details">
+                <div class="price-row">
+                    <span>Paid to</span>
+                    <span id="success-worker-name" style="color: #fff; font-weight: 600;">Raj Kumar</span>
+                </div>
+                <div class="price-row">
+                    <span>Amount</span>
+                    <span id="success-final-amount" style="color: #fff; font-weight: 600;">₹320</span>
+                </div>
+                <div class="price-row">
+                    <span>Method</span>
+                    <span id="final-method" style="color: #fff; font-weight: 600;">UPI</span>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                <button id="view-invoice-btn" class="btn" style="background: rgba(255,255,255,0.05); color: #fff;">View Invoice</button>
+                <button id="continue-to-rating-btn" class="btn btn-primary">Rate Experience</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Summary & Invoice Modal -->
+    <div id="invoice-modal" class="modal-overlay" style="display: none;">
+        <div class="glass-card invoice-card" style="max-width: 500px; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
+                <div>
+                    <h2 style="margin: 0; color: var(--accent-color);">INVOICE</h2>
+                    <p id="invoice-id" style="color: #94a3b8; font-size: 0.875rem; margin: 0.25rem 0 0 0;">#SS-982341</p>
+                </div>
+                <div style="text-align: right;">
+                    <p id="invoice-date" style="color: #fff; font-size: 0.875rem; margin: 0;">25 Mar 2026</p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                <div>
+                    <p style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Service Provider</p>
+                    <p id="invoice-worker-name" style="color: #fff; font-weight: 600; margin: 0;">Raj Kumar</p>
+                    <p id="invoice-job-type" style="color: #94a3b8; font-size: 0.875rem; margin: 0.25rem 0 0 0;">Plumber</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Time Taken</p>
+                    <p id="invoice-time-taken" style="color: #fff; font-weight: 600; margin: 0;">00:10:00</p>
+                </div>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+                <p style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">Price Breakdown</p>
+                <div class="price-row" style="margin-bottom: 0.75rem;">
+                    <span style="color: #94a3b8;">Base Price</span>
+                    <span style="color: #fff;">₹300.00</span>
+                </div>
+                <div class="price-row" style="margin-bottom: 0.75rem;">
+                    <span style="color: #94a3b8;">Service Fee (Time based)</span>
+                    <span id="invoice-service-fee" style="color: #fff;">₹0.00</span>
+                </div>
+                <div class="price-row" style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <span style="color: #94a3b8;">Platform Fee</span>
+                    <span style="color: #fff;">₹20.00</span>
+                </div>
+                <div class="price-row" style="margin-top: 1rem;">
+                    <span style="color: #fff; font-weight: 700;">Total Amount</span>
+                    <span id="invoice-total-amount" style="color: var(--accent-color); font-weight: 700; font-size: 1.25rem;">₹320.00</span>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <p style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Payment Method</p>
+                <p id="invoice-payment-method" style="color: #fff; font-weight: 600; margin: 0;">UPI</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <button id="download-invoice-btn" class="btn" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2);">
+                    <span>📥</span> Download
+                </button>
+                <button id="share-invoice-btn" class="btn" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);">
+                    <span>🔗</span> Share
+                </button>
+            </div>
+            
+            <button id="close-invoice-btn" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">Close Invoice</button>
+        </div>
+    </div>
+
+    <!-- Rating & Review Modal -->
+    <div id="rating-modal" class="modal-overlay" style="display: none;">
+        <div class="glass-card rating-card">
+            <h2 style="margin-bottom: 0.5rem;">Job Completed!</h2>
+            <p id="rating-worker-name" style="color: #94a3b8; margin-bottom: 2rem;">Please rate your experience with Raj Kumar</p>
+
+            <div class="rating-categories">
+                <div class="rating-category">
+                    <label>Work Quality</label>
+                    <div class="star-rating" data-category="quality">
+                        <span class="star" data-value="1">★</span>
+                        <span class="star" data-value="2">★</span>
+                        <span class="star" data-value="3">★</span>
+                        <span class="star" data-value="4">★</span>
+                        <span class="star" data-value="5">★</span>
+                    </div>
+                </div>
+                <div class="rating-category">
+                    <label>Punctuality</label>
+                    <div class="star-rating" data-category="punctuality">
+                        <span class="star" data-value="1">★</span>
+                        <span class="star" data-value="2">★</span>
+                        <span class="star" data-value="3">★</span>
+                        <span class="star" data-value="4">★</span>
+                        <span class="star" data-value="5">★</span>
+                    </div>
+                </div>
+                <div class="rating-category">
+                    <label>Behavior</label>
+                    <div class="star-rating" data-category="behavior">
+                        <span class="star" data-value="1">★</span>
+                        <span class="star" data-value="2">★</span>
+                        <span class="star" data-value="3">★</span>
+                        <span class="star" data-value="4">★</span>
+                        <span class="star" data-value="5">★</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group" style="margin-top: 1.5rem;">
+                <label class="input-label">Your Review</label>
+                <textarea id="review-text" class="text-area" rows="3" placeholder="Share your experience..."></textarea>
+            </div>
+
+            <button id="submit-rating-btn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Feedback</button>
+            
+            <div id="thank-you-msg" style="display: none; margin-top: 1.5rem; color: #10b981; font-weight: 600; text-align: center;">
+                <span>✅</span> Thank you for your feedback!
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Confirmation Modal -->
+    <div id="cancel-modal" class="modal-overlay" style="display: none;">
+        <div class="glass-card" style="max-width: 400px; text-align: center; padding: 2rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+            <h2 style="margin-bottom: 0.5rem;">Cancel Booking?</h2>
+            <p style="color: #94a3b8; margin-bottom: 2rem;">Are you sure you want to cancel this booking? This action cannot be undone.</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <button id="close-cancel-modal" class="btn" style="background: rgba(255,255,255,0.05); color: #fff;">No, Keep it</button>
+                <button id="confirm-cancel-btn" class="btn" style="background: #ef4444; color: #fff;">Yes, Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reschedule Modal -->
+    <div id="reschedule-modal" class="modal-overlay" style="display: none;">
+        <div class="glass-card" style="max-width: 400px; padding: 2rem;">
+            <h2 style="margin-bottom: 0.5rem;">Reschedule Job</h2>
+            <p style="color: #94a3b8; margin-bottom: 1.5rem;">Select a new time for your service.</p>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; color: #94a3b8; font-size: 0.875rem; margin-bottom: 0.5rem;">New Time Slot</label>
+                <select id="reschedule-time" class="input-field" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.75rem; border-radius: 12px;">
+                    <option value="today-4pm">Today, 04:00 PM</option>
+                    <option value="today-6pm">Today, 06:00 PM</option>
+                    <option value="tomorrow-10am">Tomorrow, 10:00 AM</option>
+                    <option value="tomorrow-2pm">Tomorrow, 02:00 PM</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <button id="close-reschedule-modal" class="btn" style="background: rgba(255,255,255,0.05); color: #fff;">Cancel</button>
+                <button id="submit-reschedule-btn" class="btn btn-primary">Request Change</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/script.js"></script>
+</body>
+</html>
